@@ -53,7 +53,10 @@
 - double/64
 - boolean/\~
 
-boolean 只有两个值：true、false，可以使用 1 bit 来存储，但是具体大小没有明确规定。JVM 会在编译时期将 boolean 类型的数据转换为 int，使用 1 来表示 true，0 表示 false。JVM 支持 boolean 数组，但是是通过读写 byte 数组来实现的。
+boolean 只有两个值：true、false，可以使用 1 bit 来存储，但是具体大小没有精确定义的。JVM 会在编译时期将 boolean 类型的数据转换为 int，使用 1 来表示 true，0 表示 false。JVM 支持 boolean 数组，但是是通过读写 byte 数组来实现的。
+
+    问: boolean占几个字节？
+    答: boolean的大小没有明确定义，在JVM编译阶段，对于单个的boolean变量会将其转换成int来对待，也就是4个字节，对于boolean数组，对将其当作byte数组来对待，也就是1个字节.
 
 - [Primitive Data Types](https://docs.oracle.com/javase/tutorial/java/nutsandbolts/datatypes.html)
 - [The Java® Virtual Machine Specification](https://docs.oracle.com/javase/specs/jvms/se8/jvms8.pdf)
@@ -67,7 +70,26 @@ Integer x = 2;     // 装箱  调用了 Integer.valueOf(2);
 int y = x;         // 拆箱  调用了 Integer.intValue(x);
 ```
 
-## 缓存池
+注意，这里不同包装类型的valueOf的实现不一样，
+
+以Integer为例， 若x属于[-128,127]，那么将返回IntegerCache.cache中已经存在的对象的引用， 超出这个范围，将重新创建一个Integer对象.
+
+```java
+Integer i1 = 100;
+Integer i2 = 100;
+System.out.println(i1 == i2);
+Integer i3 = 200;
+Integer i4 = 200;
+System.out.println(i3 == i4);
+```
+输出为
+```java
+true
+false
+```
+
+
+## 缓存池(cache)
 
 new Integer(123) 与 Integer.valueOf(123) 的区别在于：
 
@@ -184,7 +206,7 @@ public final class String
 }
 ```
 
-value 数组被声明为 final，这意味着 value 数组初始化之后就不能再引用其它数组。并且 String 内部没有改变 value 数组的方法，因此可以保证 String 不可变。
+value 数组被声明为 final，这意味着 value 数组初始化之后就不能再引用其它数组。并且 String 内部没有改变 value 数组的方法，因此可以保证 String **不可变**。
 
 ## 不可变的好处
 
@@ -194,9 +216,11 @@ value 数组被声明为 final，这意味着 value 数组初始化之后就不�
 
 **2. String Pool 的需要** 
 
-如果一个 String 对象已经被创建过了，那么就会从 String Pool 中取得引用。只有 String 是不可变的，才可能使用 String Pool。
+如果一个 String 对象已经被创建过了，那么就会从 String Pool 中取得引用。只有 String 是不可变的，才可能使用 String Pool。如果字符串是可变的，那么一个引用操作改变了对象的值，对其他引用会有影响，这样显然是不合理的。
 
 <div align="center"> <img src="pics/9112288f-23f5-4e53-b222-a46fdbca1603.png" width="300px"> </div><br>
+
+[String Pool介绍](https://www.cnblogs.com/fangfuhai/p/5500065.html)
 
 **3. 安全性** 
 
@@ -222,6 +246,8 @@ String 不可变性天生具备线程安全，可以在多个线程中安全地�
 - StringBuffer 是线程安全的，内部使用 synchronized 进行同步
 
 [StackOverflow : String, StringBuffer, and StringBuilder](https://stackoverflow.com/questions/2971315/string-stringbuffer-and-stringbuilder)
+
+[String、StringBuffer和StringBuilder的区别](https://www.jianshu.com/p/8c724dd28fa4)
 
 ## String Pool
 
@@ -249,6 +275,10 @@ System.out.println(s5 == s6);  // true
 ```
 
 在 Java 7 之前，String Pool 被放在运行时常量池中，它属于永久代。而在 Java 7，String Pool 被移到堆中。这是因为永久代的空间有限，在大量使用字符串的场景下会导致 OutOfMemoryError 错误。
+
+采用new关键字新建一个字符串对象时，JVM首先在字符串池中查找有没有"aaa"这个字符串对象，如果有，则不在池中再去创建"aaa"这个对象了，直接在堆中创建一个"aaa"字符串对象(*)，然后将堆中的这个"aaa"对象的地址返回赋给引用str3，这样，str3就指向了堆中创建的这个"aaa"字符串对象；如果没有，则首先在字符串池中创建一个"aaa"字符串对象，然后再在堆中创建一个"aaa"字符串对象，然后将堆中这个"aaa"字符串对象的地址返回赋给str3引用，这样，str3指向了堆中创建的这个"aaa"字符串对象。
+
+在(*)处可能有人会问，在查"aaa"的时候，这个"aaa"是以怎样的形式保存的呢？ 下一节说这个.
 
 - [StackOverflow : What is String interning?](https://stackoverflow.com/questions/10578984/what-is-string-interning)
 - [深入解析 String#intern](https://tech.meituan.com/in_depth_understanding_string_intern.html)
@@ -377,7 +407,7 @@ class PassByValueExample {
 
 ## float 与 double
 
-Java 不能隐式执行向下转型，因为这会使得精度降低。
+**Java 不能隐式执行向下转型，因为这会使得精度降低。**
 
 1.1 字面量属于 double 类型，不能直接将 1.1 直接赋值给 float 变量，因为这是向下转型。
 
@@ -400,7 +430,7 @@ short s1 = 1;
 // s1 = s1 + 1;
 ```
 
-但是使用 += 或者 ++ 运算符可以执行隐式类型转换。
+**但是使用 += 或者 ++ 运算符可以执行隐式类型转换。**
 
 ```java
 s1 += 1;
