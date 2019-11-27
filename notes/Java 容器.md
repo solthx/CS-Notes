@@ -1110,7 +1110,9 @@ public final class ConcurrentCache<K, V> {
 - [Java 集合细节（二）：asList 的缺陷](http://wiki.jikexueyuan.com/project/java-enhancement/java-thirtysix.html)
 - [Java Collection Framework – The LinkedList Class](http://javaconceptoftheday.com/java-collection-framework-linkedlist-class/)
 
-
+# 附录补充：
+- [HashMap的二三事(泊松分布确定TREEIFY_THRESHOLD)](https://www.jianshu.com/p/281137bdc223)
+- [轻松理解泊松分布](https://www.zhihu.com/question/26441147)
 
 
 
